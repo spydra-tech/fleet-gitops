@@ -33,7 +33,7 @@ labels:
     hosts:
       - "IR7M6ZGQJM"
       - "JMFWY8VZ09"
-  - name: Engineering department
+  - name: Ashwath Testing
     description: Hosts used by engineers
     label_membership_type: dynamic
     query: "SELECT 1 FROM host_vitals WHERE end_user_idp_department = 'Engineering'"
