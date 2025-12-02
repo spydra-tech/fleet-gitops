@@ -19,11 +19,21 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        # Fetch Fleet server version string (e.g. "v4.68.1-12-untagged")
-        RAW_VERSION="$(curl "$FLEET_URL/api/v1/fleet/version" --header "Authorization: Bearer $FLEET_API_TOKEN" --fail --silent | jq --raw-output '.version')"
+        # Fetch Fleet server version JSON (may fail or return non-JSON if FLEET_URL/token are incorrect)
+        VERSION_RESPONSE="$(curl "$FLEET_URL/api/v1/fleet/version" --header "Authorization: Bearer $FLEET_API_TOKEN" --silent || true)"
+        echo "Raw /version response:"
+        echo "$VERSION_RESPONSE"
 
         # Default fallback version if we can't parse a clean semver
         DEFAULT_FLEETCTL_VERSION="4.76.1"
+        RAW_VERSION=""
+
+        # Try to parse ".version" field if the response looks like JSON
+        if echo "$VERSION_RESPONSE" | jq -e '.version' >/dev/null 2>&1; then
+          RAW_VERSION="$(echo "$VERSION_RESPONSE" | jq --raw-output '.version')"
+        else
+          echo "Warning: unable to parse JSON version from /version response, falling back to default fleetctl version $DEFAULT_FLEETCTL_VERSION"
+        fi
 
         # Strip leading "v" (if present) and any suffix after a dash to get clean semver (e.g. "4.68.1")
         CLEAN_VERSION="${RAW_VERSION#v}"
