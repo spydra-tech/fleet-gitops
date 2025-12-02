@@ -19,21 +19,28 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        FLEET_VERSION="$(curl "$FLEET_URL/api/v1/fleet/version" --header "Authorization: Bearer $FLEET_API_TOKEN" --fail --silent | jq --raw-output '.version')"
+        # Fetch Fleet server version string (e.g. "v4.68.1-12-untagged")
+        RAW_VERSION="$(curl "$FLEET_URL/api/v1/fleet/version" --header "Authorization: Bearer $FLEET_API_TOKEN" --fail --silent | jq --raw-output '.version')"
+
+        # Default fallback version if we can't parse a clean semver
         DEFAULT_FLEETCTL_VERSION="4.76.1"
 
+        # Strip leading "v" (if present) and any suffix after a dash to get clean semver (e.g. "4.68.1")
+        CLEAN_VERSION="${RAW_VERSION#v}"
+        CLEAN_VERSION="${CLEAN_VERSION%%-*}"
+
         # Decide which fleetctl version to install:
-        # If the server returns a clean version (e.g. 4.74.0), use that.
+        # If the server returns a clean version (e.g. 4.68.1), use that so the client matches the server.
         # If the server returns a snapshot (e.g. 0.0.0-SNAPSHOT-xxxxx) or is empty, pin to DEFAULT_FLEETCTL_VERSION.
-        if [[ -z "$FLEET_VERSION" ]]; then
+        if [[ -z "$CLEAN_VERSION" ]]; then
           INSTALL_VERSION="$DEFAULT_FLEETCTL_VERSION"
-        elif [[ "$FLEET_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          INSTALL_VERSION="$FLEET_VERSION"
+        elif [[ "$CLEAN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          INSTALL_VERSION="$CLEAN_VERSION"
         else
           INSTALL_VERSION="$DEFAULT_FLEETCTL_VERSION"
         fi
 
-        echo "Installing fleetctl v$INSTALL_VERSION..."
+        echo "Server reported version '$RAW_VERSION'; installing fleetctl v$INSTALL_VERSION..."
         npm install -g "fleetctl@$INSTALL_VERSION" || npm install -g fleetctl@latest
 
     - name: Configure fleetctl
