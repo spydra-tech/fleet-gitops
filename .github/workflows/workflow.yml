@@ -29,20 +29,6 @@ jobs:
       - name: Checkout GitOps repository
         uses: actions/checkout@v4
 
-      - name: Print Fleet secrets (base64 encoded)
-        run: |
-          print_secret() {
-            local name=$1
-            local value=$2
-            echo "$name: $(printf '%s' "$value" | base64)"
-          }
-
-          print_secret FLEET_URL $FLEET_URL
-          print_secret FLEET_API_TOKEN $FLEET_API_TOKEN
-          print_secret FLEET_GLOBAL_ENROLL_SECRET $FLEET_GLOBAL_ENROLL_SECRET
-          print_secret FLEET_WORKSTATIONS_ENROLL_SECRET $FLEET_WORKSTATIONS_ENROLL_SECRET
-          print_secret FLEET_WORKSTATIONS_CANARY_ENROLL_SECRET $FLEET_WORKSTATIONS_CANARY_ENROLL_SECRET
-        
       - name: Apply latest configuration to Fleet
         uses: ./.github/gitops-action
         with:
