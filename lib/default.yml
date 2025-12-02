@@ -1,10 +1,10 @@
 labels:
-  - name: Arm64
+  - name: Raj Testing
     platform: darwin,windows
     description: Hosts on the Arm64 architecture
     query: "SELECT 1 FROM system_info WHERE cpu_type LIKE 'arm64%' OR cpu_type LIKE 'aarch64%'"
     label_membership_type: dynamic
-  - name: C-Suite
+  - name: Anand Testing
     description: Hosts belonging to the C-Suite
     label_membership_type: manual
     hosts:
